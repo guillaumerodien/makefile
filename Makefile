@@ -1,24 +1,28 @@
-libarithmetique_library.a:
-	gcc -fPIC -c -Wall addition.c
-	gcc -fPIC -c -Wall soustraction.c
-	gcc -fPIC -c -Wall multiplication.c
-	gcc -fPIC -c -Wall division.c
+CC = gcc
+CFLAGS = -Wall -fPIC
+FILES = addition.o soustraction.o division.o multiplication.o 
+LINKNAME = arithmetique
+LIBSTATIC =lib$(LINKNAME).a
+LIBDYNA = lib$(LINKNAME).so
+STATIC = $(LINKNAME).static
+DYNA = $(LINKNAME).dyna
+LIBNAME = library
+LIB = LIBRARY
+SO =.so
 
-	ar rcs libarithmetique_library.a addition.o soustraction.o multiplication.o division.o
+$(FILES):
 
-libarithmetique_library.so.1.0.0: addition.o soustraction.o division.o multiplication.o	
-	gcc -shared -fPIC -Wl,-soname,libarithmetique_library.so.1 -o libarithmetique_library.so.1.0.0 addition.o soustraction.o multiplication.o division.o -lc
+$(LIBDYNA): main.o $(FILES)
+	$(CC) -shared -fPIC -Wl,-soname,lib$(LINKNAME)_$(LIBNAME)$(SO).1 -o lib$(LINKNAME)_$(LIBNAME)$(SO).1.0.0 $^ -lc
+	ln -sf $@.1.0.0 $@
+	ln -sf $@.1.0.0 $@.1
+	$(CC) -o $(LINKNAME) main.o -L. -l$(LINKNAME)_$(LIBNAME)
+	LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./$(LINKNAME)
 
-	ln -sf libarithmetique_library.so.1.0.0 libarithmetique_library.so
-
-	ln -sf libarithmetique_library.so.1.0.0 libarithmetique_library.so.1
-prog: libarithmetique_library.a
-	gcc -c -Wall main.c 
-
-	gcc -o aritthmetique.static main.o -L. -l:libarithmetique_library.a
-
-	gcc -o aritthmetique main.o -L. -larithmetique_library
-
-	LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./aritthmetique
+$(LIBSTATIC): main.o $(FILES)
+	ar rcs lib$(LINKNAME)_$(LIBNAME).a $^
+	$(CC) -o $(LINKNAME).static main.o -L. -l:lib$(LINKNAME)_$(LIBNAME).a
+	LD_$(LIB)_PATH=.:$LD_$(LIB)_PATH ./$@
+	
 clean:
-	rm *.o *arithmetique*
+	rm *.o *$(LINKNAME)*
